@@ -1,4 +1,4 @@
-#include <xhook/xhook.h>
+#include <xhook.h>
 #include <sys/system_properties.h>
 #include <dlfcn.h>
 #include <util/plt.h>
@@ -25,7 +25,8 @@ using RegisterNatives_t = jint(JNIEnv *, jclass, const JNINativeMethod *, jint);
 static SetTableOverride_t *setTableOverride = nullptr;
 static RegisterNatives_t *old_RegisterNatives = nullptr;
 
-static JNINativeMethod *onRegisterZygote(const char *className, const JNINativeMethod *methods, int numMethods) {
+static JNINativeMethod *
+onRegisterZygote(const char *className, const JNINativeMethod *methods, int numMethods) {
 
     auto *newMethods = new JNINativeMethod[numMethods];
     memcpy(newMethods, methods, sizeof(JNINativeMethod) * numMethods);
@@ -35,7 +36,9 @@ static JNINativeMethod *onRegisterZygote(const char *className, const JNINativeM
         method = methods[i];
 
         if (strcmp(method.name, "nativeForkAndSpecialize") == 0) {
-            JNI::Zygote::nativeForkAndSpecialize = new JNINativeMethod{method.name, method.signature, method.fnPtr};
+            JNI::Zygote::nativeForkAndSpecialize = new JNINativeMethod{method.name,
+                                                                       method.signature,
+                                                                       method.fnPtr};
 
             if (strcmp(nativeForkAndSpecialize_r_sig, method.signature) == 0)
                 newMethods[i].fnPtr = (void *) nativeForkAndSpecialize_r;
@@ -70,11 +73,14 @@ static JNINativeMethod *onRegisterZygote(const char *className, const JNINativeM
             if (replaced) {
                 LOGI("replaced com.android.internal.os.Zygote#nativeForkAndSpecialize");
                 api::setNativeMethodFunc(
-                        get_modules()->at(0)->token, className, newMethods[i].name, newMethods[i].signature, newMethods[i].fnPtr);
+                        get_modules()->at(0)->token, className, newMethods[i].name,
+                        newMethods[i].signature, newMethods[i].fnPtr);
             }
             Status::WriteMethod(Status::Method::forkAndSpecialize, replaced, method.signature);
         } else if (strcmp(method.name, "nativeSpecializeAppProcess") == 0) {
-            JNI::Zygote::nativeSpecializeAppProcess = new JNINativeMethod{method.name, method.signature, method.fnPtr};
+            JNI::Zygote::nativeSpecializeAppProcess = new JNINativeMethod{method.name,
+                                                                          method.signature,
+                                                                          method.fnPtr};
 
             if (strcmp(nativeSpecializeAppProcess_r_sig, method.signature) == 0)
                 newMethods[i].fnPtr = (void *) nativeSpecializeAppProcess_r;
@@ -98,11 +104,13 @@ static JNINativeMethod *onRegisterZygote(const char *className, const JNINativeM
             if (replaced) {
                 LOGI("replaced com.android.internal.os.Zygote#nativeSpecializeAppProcess");
                 api::setNativeMethodFunc(
-                        get_modules()->at(0)->token, className, newMethods[i].name, newMethods[i].signature, newMethods[i].fnPtr);
+                        get_modules()->at(0)->token, className, newMethods[i].name,
+                        newMethods[i].signature, newMethods[i].fnPtr);
             }
             Status::WriteMethod(Status::Method::specializeAppProcess, replaced, method.signature);
         } else if (strcmp(method.name, "nativeForkSystemServer") == 0) {
-            JNI::Zygote::nativeForkSystemServer = new JNINativeMethod{method.name, method.signature, method.fnPtr};
+            JNI::Zygote::nativeForkSystemServer = new JNINativeMethod{method.name, method.signature,
+                                                                      method.fnPtr};
 
             if (strcmp(nativeForkSystemServer_sig, method.signature) == 0)
                 newMethods[i].fnPtr = (void *) nativeForkSystemServer;
@@ -115,7 +123,8 @@ static JNINativeMethod *onRegisterZygote(const char *className, const JNINativeM
             if (replaced) {
                 LOGI("replaced com.android.internal.os.Zygote#nativeForkSystemServer");
                 api::setNativeMethodFunc(
-                        get_modules()->at(0)->token, className, newMethods[i].name, newMethods[i].signature, newMethods[i].fnPtr);
+                        get_modules()->at(0)->token, className, newMethods[i].name,
+                        newMethods[i].signature, newMethods[i].fnPtr);
             }
             Status::WriteMethod(Status::Method::forkSystemServer, replaced, method.signature);
         }
@@ -124,7 +133,8 @@ static JNINativeMethod *onRegisterZygote(const char *className, const JNINativeM
     return newMethods;
 }
 
-static JNINativeMethod *onRegisterSystemProperties(const char *className, const JNINativeMethod *methods, int numMethods) {
+static JNINativeMethod *
+onRegisterSystemProperties(const char *className, const JNINativeMethod *methods, int numMethods) {
 
     auto *newMethods = new JNINativeMethod[numMethods];
     memcpy(newMethods, methods, sizeof(JNINativeMethod) * numMethods);
@@ -134,7 +144,8 @@ static JNINativeMethod *onRegisterSystemProperties(const char *className, const 
         method = methods[i];
 
         if (strcmp(method.name, "native_set") == 0) {
-            JNI::SystemProperties::set = new JNINativeMethod{method.name, method.signature, method.fnPtr};
+            JNI::SystemProperties::set = new JNINativeMethod{method.name, method.signature,
+                                                             method.fnPtr};
 
             if (strcmp("(Ljava/lang/String;Ljava/lang/String;)V", method.signature) == 0)
                 newMethods[i].fnPtr = (void *) SystemProperties_set;
@@ -145,14 +156,16 @@ static JNINativeMethod *onRegisterSystemProperties(const char *className, const 
                 LOGI("replaced android.os.SystemProperties#native_set");
 
                 api::setNativeMethodFunc(
-                        get_modules()->at(0)->token, className, newMethods[i].name, newMethods[i].signature, newMethods[i].fnPtr);
+                        get_modules()->at(0)->token, className, newMethods[i].name,
+                        newMethods[i].signature, newMethods[i].fnPtr);
             }
         }
     }
     return newMethods;
 }
 
-static JNINativeMethod *handleRegisterNative(const char *className, const JNINativeMethod *methods, int numMethods) {
+static JNINativeMethod *
+handleRegisterNative(const char *className, const JNINativeMethod *methods, int numMethods) {
     if (strcmp("com/android/internal/os/Zygote", className) == 0) {
         return onRegisterZygote(className, methods, numMethods);
     } else if (strcmp("android/os/SystemProperties", className) == 0) {
@@ -180,7 +193,8 @@ NEW_FUNC_DEF(int, jniRegisterNativeMethods, JNIEnv *env, const char *className,
     LOGD("jniRegisterNativeMethods %s", className);
 
     JNINativeMethod *newMethods = handleRegisterNative(className, methods, numMethods);
-    int res = old_jniRegisterNativeMethods(env, className, newMethods ? newMethods : methods, numMethods);
+    int res = old_jniRegisterNativeMethods(env, className, newMethods ? newMethods : methods,
+                                           numMethods);
     /*if (!newMethods) {
         NativeMethod::jniRegisterNativeMethodsPost(env, className, methods, numMethods);
     }*/
@@ -207,7 +221,8 @@ static void prepareClassesForRegisterNativeHook(JNIEnv *env) {
     env->DeleteLocalRef(_systemPropertiesClass);
 }
 
-static int new_RegisterNative(JNIEnv *env, jclass cls, const JNINativeMethod *methods, jint numMethods) {
+static int
+new_RegisterNative(JNIEnv *env, jclass cls, const JNINativeMethod *methods, jint numMethods) {
     prepareClassesForRegisterNativeHook(env);
 
     const char *className;
@@ -267,12 +282,22 @@ static void read_prop() {
 
     __system_property_get("ro.build.version.release", androidVersionName);
 
-    LOGI("system version %s (api %d, preview_sdk %d)", androidVersionName, sdkLevel, previewSdkLevel);
+    LOGI("system version %s (api %d, preview_sdk %d)", androidVersionName, sdkLevel,
+         previewSdkLevel);
 }
 
 extern "C" void constructor() __attribute__((constructor));
 
+
+NEW_FUNC_DEF(void, _ZN7android14AndroidRuntime8setArgv0EPKcb, JNIEnv *env, const char *argv0, bool setProcName) {
+
+    LOGI("_ZN7android14AndroidRuntime8setArgv0EPKcb  %s", argv0);
+    old__ZN7android14AndroidRuntime8setArgv0EPKcb(env, argv0, setProcName);
+}
+
 void constructor() {
+    XHOOK_REGISTER(".*\\libandroid_runtime.so$", _ZN7android14AndroidRuntime8setArgv0EPKcb);
+
 #ifdef DEBUG_APP
     hide::hide_modules(nullptr, 0);
 #endif
@@ -312,13 +337,19 @@ void constructor() {
         LOGE("failed to refresh hook");
     }
 
+
     useTableOverride = old_jniRegisterNativeMethods == nullptr;
+
+    LOGI("Q_M   ----- jniRegisterNativeMethods,%d", useTableOverride);
+
 
     if (useTableOverride) {
         LOGI("no jniRegisterNativeMethods");
 
-        auto *GetJniNativeInterface = (GetJniNativeInterface_t *) plt_dlsym("_ZN3art21GetJniNativeInterfaceEv", nullptr);
-        setTableOverride = (SetTableOverride_t *) plt_dlsym("_ZN3art9JNIEnvExt16SetTableOverrideEPK18JNINativeInterface", nullptr);
+        auto *GetJniNativeInterface = (GetJniNativeInterface_t *) plt_dlsym(
+                "_ZN3art21GetJniNativeInterfaceEv", nullptr);
+        setTableOverride = (SetTableOverride_t *) plt_dlsym(
+                "_ZN3art9JNIEnvExt16SetTableOverrideEPK18JNINativeInterface", nullptr);
 
         if (setTableOverride != nullptr && GetJniNativeInterface != nullptr) {
             auto functions = GetJniNativeInterface();
@@ -336,7 +367,8 @@ void constructor() {
 
         auto handle = dlopen("libnativehelper.so", 0);
         if (handle) {
-            old_jniRegisterNativeMethods = (jniRegisterNativeMethods_t *) dlsym(handle, "jniRegisterNativeMethods");
+            old_jniRegisterNativeMethods = (jniRegisterNativeMethods_t *) dlsym(handle,
+                                                                                "jniRegisterNativeMethods");
         }
     }
 

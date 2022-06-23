@@ -65,6 +65,9 @@ void load_modules() {
     uint8_t *buffer;
     uint32_t buffer_size;
 
+    LOGD("load_modules  函数调用！！！");
+
+
     char path[PATH_MAX];
     void *handle;
     const int riruApiVersion = RIRU_API_VERSION;

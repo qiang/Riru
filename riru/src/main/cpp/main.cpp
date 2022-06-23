@@ -340,11 +340,11 @@ void constructor() {
 
     useTableOverride = old_jniRegisterNativeMethods == nullptr;
 
-    LOGI("Q_M   ----- jniRegisterNativeMethods,%d", useTableOverride);
+    LOGI("Q_M   ----- jniRegisterNativeMethods useTableOverride=%d", useTableOverride);
 
-
+    //android 10 上这里为 0
     if (useTableOverride) {
-        LOGI("no jniRegisterNativeMethods");
+        LOGI("Q_M no jniRegisterNativeMethods");
 
         auto *GetJniNativeInterface = (GetJniNativeInterface_t *) plt_dlsym(
                 "_ZN3art21GetJniNativeInterfaceEv", nullptr);
